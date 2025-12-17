@@ -1,0 +1,1 @@
+ALTER TABLE recommendations DROP CONSTRAINT IF EXISTS recommendations_link_check;

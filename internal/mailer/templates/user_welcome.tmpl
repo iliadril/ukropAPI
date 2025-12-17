@@ -1,0 +1,42 @@
+{{define "subject"}}~~~Witamy w Ukropie~~~{{end}}
+
+{{define "plainBody"}}
+Hej,
+
+Fajnie że jesteś!
+Twoje ID to {{.userID}}.
+
+Wyślij request do `PUT /v1/users/activated` z takim JSONowym BODY aby aktywować konto:
+
+{"token": "{{.activationToken}}"}
+
+Masz 3 dni bo potem się przeterminuje.
+
+pzdr,
+Ukrop
+{{end}}
+
+{{define "htmlBody"}}
+<!doctype html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+<body>
+    <p>Hej,</p>
+    <p>Fajnie że jesteś!</p>
+    <p>Twoje ID to {{.userID}}.</p>
+     <p>Wyślij request do <code>PUT /v1/users/activated</code> z takim JSONowym BODY aby aktywować konto:</p>
+    <pre><code>
+    {"token": "{{.activationToken}}"}
+    </code></pre>
+    <p>Masz 3 dni bo potem się przeterminuje.</p>
+    <p>pzdr,</p>
+    <p>Ukrop</p>
+</body>
+
+</html>
+{{end}}

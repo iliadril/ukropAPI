@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS recommendations_title_idx ON recommendations USING GIN (to_tsvector('simple', title));

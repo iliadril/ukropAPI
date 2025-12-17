@@ -1,0 +1,1 @@
+ALTER TABLE recommendations ADD CONSTRAINT recommendations_link_check CHECK ( yt_link IS NOT NULL OR spotify_link IS NOT NULL );

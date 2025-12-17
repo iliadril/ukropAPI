@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS recommendations_title_idx;
