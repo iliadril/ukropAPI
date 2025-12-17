@@ -15,10 +15,13 @@ import (
 
 	"api.ukrop.pl/internal/data"
 	"api.ukrop.pl/internal/mailer"
+	"api.ukrop.pl/internal/vcs"
 	_ "github.com/lib/pq"
 )
 
-const version = "1.0.0"
+var (
+	version = vcs.Version()
+)
 
 type config struct {
 	port int
