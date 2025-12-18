@@ -13,4 +13,5 @@ CREATE TABLE IF NOT EXISTS users_permissions
 
 INSERT INTO permissions (code)
 VALUES ('recommendations:read'),
-       ('recommendations:write');
+       ('recommendations:write'),
+       ('users:manage');

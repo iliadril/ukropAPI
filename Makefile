@@ -77,3 +77,28 @@ build/api:
 	@echo 'Building cmd/api...'
 	go build -ldflags='-s' -o=./bin/api ./cmd/api
 	GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=./bin/linux_amd64/api ./cmd/api
+
+# ==================================================================================== #
+# PRODUCTION
+# ==================================================================================== #
+
+production_host_ip = ${UKROP_PROD_IP}
+production_port = ${UKROP_PROD_PORT}
+
+## production/connect: connect to the production server
+.PHONY: production/connect
+production/connect:
+	ssh ukrop@${production_host_ip} -p {production_port}
+
+## production/deploy/api: deploy the api to production
+.PHONY: production/deploy/api
+production/deploy/api:
+	rsync -e 'ssh -p {production_port}' -P ./bin/linux_amd64/api ukrop@${production_host_ip}:~
+	rsync -e 'ssh -p {production_port}' -rP --delete ./migrations ukrop@${production_host_ip}:~
+	rsync -e 'ssh -p {production_port}' -P ./remote/production/ukrop-api.service ukrop@${production_host_ip}:~
+	ssh -p 10242 -t ukrop@${production_host_ip} '\
+                         		migrate -path ~/migrations -database $$UKROP_DB_DSN up \
+                         		&& sudo mv ~/ukrop-api.service /etc/systemd/system/ \
+                         		&& sudo systemctl enable ukrop-api \
+                         		&& sudo systemctl restart ukrop-api \
+                         		'

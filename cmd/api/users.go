@@ -12,6 +12,7 @@ import (
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name     string `json:"name"`
+		Username string `json:"username"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
@@ -24,6 +25,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	user := &data.User{
 		Name:      input.Name,
+		Username:  input.Username,
 		Email:     input.Email,
 		Activated: false,
 	}
@@ -46,8 +48,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		case errors.Is(err, data.ErrDuplicateEmail):
 			v.AddError("email", "a user with this email already exists")
 			app.failedValidationResponse(w, r, v.Errors)
-		case errors.Is(err, data.ErrDuplicateName):
-			v.AddError("name", "a user with this name already exists")
+		case errors.Is(err, data.ErrDuplicateUsername):
+			v.AddError("username", "a user with this username already exists")
 			app.failedValidationResponse(w, r, v.Errors)
 		default:
 			app.serverErrorResponse(w, r, err)
@@ -79,6 +81,30 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	})
 
 	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) showUserHandler(w http.ResponseWriter, r *http.Request) {
+	username, err := app.readUsernameParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	user, err := app.models.Users.GetByUsername(username)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

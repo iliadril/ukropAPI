@@ -25,6 +25,15 @@ func (app *application) readIDParam(r *http.Request) (int, error) {
 	return id, nil
 }
 
+func (app *application) readUsernameParam(r *http.Request) (string, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	nameParam := params.ByName("username")
+	if nameParam == "" {
+		return "", errors.New("invalid name parameter")
+	}
+	return nameParam, nil
+}
+
 type envelope map[string]any
 
 func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
