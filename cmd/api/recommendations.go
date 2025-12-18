@@ -12,7 +12,6 @@ import (
 
 func (app *application) createRecommendationHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct { // sort of an input DTO
-		CreatedBy   string `json:"created_by"`
 		Title       string `json:"title"`
 		YTLink      string `json:"yt_link"`
 		SpotifyLink string `json:"spotify_link"`
@@ -25,8 +24,11 @@ func (app *application) createRecommendationHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
+	user := app.contextGetUser(r)
+
 	recommendation := &data.Recommendation{
-		CreatedBy:   input.CreatedBy,
+		UserID:      user.ID,
+		CreatedBy:   user,
 		Title:       input.Title,
 		YTLink:      input.YTLink,
 		SpotifyLink: input.SpotifyLink,
@@ -98,7 +100,6 @@ func (app *application) updateRecommendationHandler(w http.ResponseWriter, r *ht
 	}
 
 	var input struct {
-		CreatedBy   *string `json:"created_by"`
 		Title       *string `json:"title"`
 		YTLink      *string `json:"yt_link"`
 		SpotifyLink *string `json:"spotify_link"`
@@ -111,11 +112,8 @@ func (app *application) updateRecommendationHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	if input.CreatedBy != nil {
-		recommendation.CreatedBy = *input.CreatedBy // dereference the pointer to get the value
-	}
 	if input.Title != nil {
-		recommendation.Title = *input.Title
+		recommendation.Title = *input.Title // dereference the pointer to get the value
 	}
 	if input.YTLink != nil {
 		recommendation.YTLink = *input.YTLink
@@ -191,8 +189,8 @@ func (app *application) listRecommendationsHandler(w http.ResponseWriter, r *htt
 	input.Filters.Page = app.readInt(qs, "page", 1, v)
 	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
 
-	input.Filters.Sort = app.readString(qs, "sort", "-id")
-	input.Filters.SortSafelist = []string{"id", "created_at", "created_by", "-id", "-created_at", "-created_by"}
+	input.Filters.Sort = app.readString(qs, "sort", "-created_at")
+	input.Filters.SortSafelist = []string{"created_at", "created_by", "-created_at", "-created_by"}
 
 	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
