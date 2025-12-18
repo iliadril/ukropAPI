@@ -34,3 +34,24 @@ GET {{host}}/v1/search/youtube/radiohead
         client.assert(response.status === 401, "Expected 401 Unauthorized for missing token");
     });
 %}
+
+### Spotify Search - Valid Query
+GET {{host}}/v1/search/spotify/imagine+dragons-radioactive
+Authorization: Bearer {{auth_token}}
+
+> {%
+    client.test("Search returns results", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("results"), "Response body missing 'results' key");
+        client.assert(response.body.results.length > 0, "No results returned for query");
+    });
+%}
+
+### Spotify Search - Unauthorized (Should Fail)
+GET {{host}}/v1/search/spotify/radiohead
+
+> {%
+    client.test("Unauthorized search fails", function() {
+        client.assert(response.status === 401, "Expected 401 Unauthorized for missing token");
+    });
+%}

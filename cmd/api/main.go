@@ -15,6 +15,7 @@ import (
 
 	"api.ukrop.pl/internal/data"
 	"api.ukrop.pl/internal/mailer"
+	"api.ukrop.pl/internal/spotify"
 	"api.ukrop.pl/internal/vcs"
 	"api.ukrop.pl/internal/youtube"
 	_ "github.com/lib/pq"
@@ -49,6 +50,10 @@ type config struct {
 		apiKey     string
 		maxResults int
 	}
+	sp struct {
+		clientID     string
+		clientSecret string
+	}
 	cors struct {
 		trustedOrigins []string
 	}
@@ -60,6 +65,7 @@ type application struct {
 	models  data.Models
 	mailer  *mailer.Mailer
 	youtube *youtube.YouTubeClient
+	spotify *spotify.SpotifyClient
 	wg      sync.WaitGroup
 }
 
@@ -84,8 +90,11 @@ func main() {
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Ukrop <no-reply@ukrop.pl>", "SMTP sender")
 
-	flag.StringVar(&cfg.yt.apiKey, "yt-api-key", "", "Api key for Youtube Data")
+	flag.StringVar(&cfg.yt.apiKey, "yt-api-key", os.Getenv("YOUTUBE_API_KEY"), "Api key for Youtube Data")
 	flag.IntVar(&cfg.yt.maxResults, "yt-max-resuts", 5, "Max queries returned by YT api at once")
+
+	flag.StringVar(&cfg.sp.clientID, "sp-client-id", os.Getenv("SPOTIFY_CLIENT_ID"), "Client ID for Spotify")
+	flag.StringVar(&cfg.sp.clientSecret, "sp-client-secret", os.Getenv("SPOTIFY_CLIENT_SECRET"), "Client Secret for Spotify")
 
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separete)", func(val string) error {
 		cfg.cors.trustedOrigins = strings.Fields(val)
@@ -123,6 +132,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	sp, err := spotify.New(cfg.sp.clientID, cfg.sp.clientSecret)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	// ======== EXPVAR ========
 	expvar.NewString("version").Set(version)
 	expvar.Publish("goroutines", expvar.Func(func() any {
@@ -142,6 +157,7 @@ func main() {
 		models:  data.NewModels(db),
 		mailer:  m,
 		youtube: yt,
+		spotify: sp,
 	}
 
 	err = app.serve()

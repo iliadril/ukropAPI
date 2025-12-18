@@ -10,8 +10,9 @@ import (
 )
 
 type SearchResult struct {
+	Artist       string `json:"artist"`
 	Title        string `json:"title"`
-	VideoURL     string `json:"video_url"`
+	YoutubeURL   string `json:"youtube_url"`
 	ThumbnailURL string `json:"thumbnail_url"`
 }
 
@@ -47,8 +48,9 @@ func (y *YouTubeClient) SearchMusic(query string, maxResults int) ([]SearchResul
 	var results []SearchResult
 	for _, item := range response.Items {
 		results = append(results, SearchResult{
+			Artist:       item.Snippet.ChannelTitle,
 			Title:        item.Snippet.Title,
-			VideoURL:     fmt.Sprintf("https://music.youtube.com/watch?v=%s", item.Id.VideoId),
+			YoutubeURL:   fmt.Sprintf("https://music.youtube.com/watch?v=%s", item.Id.VideoId),
 			ThumbnailURL: item.Snippet.Thumbnails.High.Url,
 		})
 	}
