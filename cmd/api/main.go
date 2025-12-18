@@ -16,6 +16,7 @@ import (
 	"api.ukrop.pl/internal/data"
 	"api.ukrop.pl/internal/mailer"
 	"api.ukrop.pl/internal/vcs"
+	"api.ukrop.pl/internal/youtube"
 	_ "github.com/lib/pq"
 )
 
@@ -44,17 +45,22 @@ type config struct {
 		password string
 		sender   string
 	}
+	yt struct {
+		apiKey     string
+		maxResults int
+	}
 	cors struct {
 		trustedOrigins []string
 	}
 }
 
 type application struct {
-	config config
-	logger *slog.Logger
-	models data.Models
-	mailer *mailer.Mailer
-	wg     sync.WaitGroup
+	config  config
+	logger  *slog.Logger
+	models  data.Models
+	mailer  *mailer.Mailer
+	youtube *youtube.YouTubeClient
+	wg      sync.WaitGroup
 }
 
 func main() {
@@ -77,6 +83,9 @@ func main() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Ukrop <no-reply@ukrop.pl>", "SMTP sender")
+
+	flag.StringVar(&cfg.yt.apiKey, "yt-api-key", "", "Api key for Youtube Data")
+	flag.IntVar(&cfg.yt.maxResults, "yt-max-resuts", 5, "Max queries returned by YT api at once")
 
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separete)", func(val string) error {
 		cfg.cors.trustedOrigins = strings.Fields(val)
@@ -108,6 +117,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	yt, err := youtube.New(cfg.yt.apiKey)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	// ======== EXPVAR ========
 	expvar.NewString("version").Set(version)
 	expvar.Publish("goroutines", expvar.Func(func() any {
@@ -122,10 +137,11 @@ func main() {
 	// ======== END EXPVAR ========
 
 	app := &application{
-		config: cfg,
-		logger: logger,
-		models: data.NewModels(db),
-		mailer: m,
+		config:  cfg,
+		logger:  logger,
+		models:  data.NewModels(db),
+		mailer:  m,
+		youtube: yt,
 	}
 
 	err = app.serve()

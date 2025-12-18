@@ -21,6 +21,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPatch, "/v1/recommendations/:id", app.requirePermission("recommendations:write", app.updateRecommendationHandler))
 	router.HandlerFunc(http.MethodDelete, "/v1/recommendations/:id", app.requirePermission("recommendations:write", app.deleteRecommendationHandler))
 
+	router.HandlerFunc(http.MethodGet, "/v1/search/youtube/:query", app.requirePermission("recommendations:write", app.searchYoutubeHandler))
+
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/users/:username", app.showUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)

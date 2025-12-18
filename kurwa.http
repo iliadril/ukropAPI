@@ -1,0 +1,36 @@
+### Authenticate and Capture Token
+POST {{host}}/v1/tokens/authentication
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.test("Authentication successful", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("auth_token", response.body.authentication_token.token);
+%}
+
+### YouTube Search - Valid Query
+GET {{host}}/v1/search/youtube/imagine+dragons-radioactive
+Authorization: Bearer {{auth_token}}
+
+> {%
+    client.test("Search returns results", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+        client.assert(response.body.hasOwnProperty("results"), "Response body missing 'results' key");
+        client.assert(response.body.results.length > 0, "No results returned for query");
+    });
+%}
+
+### YouTube Search - Unauthorized (Should Fail)
+GET {{host}}/v1/search/youtube/radiohead
+
+> {%
+    client.test("Unauthorized search fails", function() {
+        client.assert(response.status === 401, "Expected 401 Unauthorized for missing token");
+    });
+%}

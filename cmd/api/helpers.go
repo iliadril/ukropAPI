@@ -34,6 +34,15 @@ func (app *application) readUsernameParam(r *http.Request) (string, error) {
 	return nameParam, nil
 }
 
+func (app *application) readQueryParam(r *http.Request) (string, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	queryParam := params.ByName("query")
+	if queryParam == "" {
+		return "", errors.New("invalid query parameter")
+	}
+	return queryParam, nil
+}
+
 type envelope map[string]any
 
 func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
