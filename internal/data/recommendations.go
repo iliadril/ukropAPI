@@ -16,7 +16,9 @@ type Recommendation struct {
 	CreatedAt   time.Time `json:"created_at"`
 	CreatedBy   *User     `json:"created_by"`
 	UserID      int       `json:"-"`
+	Artist      string    `json:"artist"`
 	Title       string    `json:"title"`
+	CoverURL    string    `json:"cover_url,omitzero"`
 	YTLink      string    `json:"yt_link,omitzero"`
 	SpotifyLink string    `json:"spotify_link,omitzero"`
 	Comment     string    `json:"comment,omitzero"`
@@ -24,8 +26,11 @@ type Recommendation struct {
 }
 
 func ValidateRecommendation(v *validator.Validator, recommendation *Recommendation) {
+	v.Check(recommendation.Artist != "", "artist", "must be provided")
+	v.Check(len(recommendation.Artist) <= 128, "artist", "must not be more than 128 bytes long")
+
 	v.Check(recommendation.Title != "", "title", "must be provided")
-	v.Check(len(recommendation.Title) <= 500, "title", "must not be more than 500 bytes long")
+	v.Check(len(recommendation.Title) <= 128, "title", "must not be more than 128 bytes long")
 
 	v.Check(recommendation.UserID != 0, "created_by", "must be provided")
 
@@ -38,10 +43,13 @@ type RecommendationModel struct {
 
 func (m RecommendationModel) Insert(recommendation *Recommendation) error {
 	query := `
-		INSERT INTO recommendations (user_id, title, yt_link, spotify_link, comment)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO recommendations (user_id, artist, title, cover_url, yt_link, spotify_link, comment)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at, version`
-	args := []any{recommendation.UserID, recommendation.Title, recommendation.YTLink, recommendation.SpotifyLink, recommendation.Comment}
+	args := []any{
+		recommendation.UserID, recommendation.Artist, recommendation.Title, recommendation.CoverURL,
+		recommendation.YTLink, recommendation.SpotifyLink, recommendation.Comment,
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -55,7 +63,7 @@ func (m RecommendationModel) Get(id int) (*Recommendation, error) {
 	}
 
 	query := `
-		SELECT r.id, r.created_at, r.user_id, r.title, r.yt_link, r.spotify_link, r.comment, r.version,
+		SELECT r.id, r.created_at, r.user_id, r.artist, r.title, r.cover_url, r.yt_link, r.spotify_link, r.comment, r.version,
 		       u.id, u.name, u.username
 		FROM recommendations r
 		INNER JOIN users u ON r.user_id = u.id
@@ -71,7 +79,9 @@ func (m RecommendationModel) Get(id int) (*Recommendation, error) {
 		&recommendation.ID,
 		&recommendation.CreatedAt,
 		&recommendation.UserID,
+		&recommendation.Artist,
 		&recommendation.Title,
+		&recommendation.CoverURL,
 		&recommendation.YTLink,
 		&recommendation.SpotifyLink,
 		&recommendation.Comment,
@@ -95,12 +105,14 @@ func (m RecommendationModel) Get(id int) (*Recommendation, error) {
 func (m RecommendationModel) Update(recommendation *Recommendation) error {
 	query := `
         UPDATE recommendations 
-        SET title = $1, yt_link = $2, spotify_link = $3, comment = $4, version = version + 1
-        WHERE id = $5 AND version = $6
+        SET artist = $1, title = $2, cover_url = $3, yt_link = $4, spotify_link = $5, comment = $6, version = version + 1
+        WHERE id = $7 AND version = $8
         RETURNING version`
 
 	args := []any{
+		recommendation.Artist,
 		recommendation.Title,
+		recommendation.CoverURL,
 		recommendation.YTLink,
 		recommendation.SpotifyLink,
 		recommendation.Comment,
@@ -154,7 +166,7 @@ func (m RecommendationModel) Delete(id int) error {
 
 func (m RecommendationModel) GetAll(createdAt time.Time, createdBy, title string, filters Filters) ([]*Recommendation, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT count(*) OVER(), r.id, r.created_at, r.user_id, r.title, r.yt_link, r.spotify_link, r.comment, r.version,
+		SELECT count(*) OVER(), r.id, r.created_at, r.user_id, r.artist, r.title, r.cover_url, r.yt_link, r.spotify_link, r.comment, r.version,
 		       u.id, u.name, u.username
 		FROM recommendations r
 		INNER JOIN users u ON r.user_id = u.id
@@ -188,7 +200,9 @@ func (m RecommendationModel) GetAll(createdAt time.Time, createdBy, title string
 			&recommendation.ID,
 			&recommendation.CreatedAt,
 			&recommendation.UserID,
+			&recommendation.Artist,
 			&recommendation.Title,
+			&recommendation.CoverURL,
 			&recommendation.YTLink,
 			&recommendation.SpotifyLink,
 			&recommendation.Comment,

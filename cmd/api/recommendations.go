@@ -12,7 +12,9 @@ import (
 
 func (app *application) createRecommendationHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct { // sort of an input DTO
+		Artist      string `json:"artist"`
 		Title       string `json:"title"`
+		CoverURL    string `json:"cover_url"`
 		YTLink      string `json:"yt_link"`
 		SpotifyLink string `json:"spotify_link"`
 		Comment     string `json:"comment"`
@@ -29,7 +31,9 @@ func (app *application) createRecommendationHandler(w http.ResponseWriter, r *ht
 	recommendation := &data.Recommendation{
 		UserID:      user.ID,
 		CreatedBy:   user,
+		Artist:      input.Artist,
 		Title:       input.Title,
+		CoverURL:    input.CoverURL,
 		YTLink:      input.YTLink,
 		SpotifyLink: input.SpotifyLink,
 		Comment:     input.Comment,
