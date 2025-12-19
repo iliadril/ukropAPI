@@ -53,6 +53,7 @@ type config struct {
 	sp struct {
 		clientID     string
 		clientSecret string
+		maxResults   int
 	}
 	cors struct {
 		trustedOrigins []string
@@ -64,8 +65,8 @@ type application struct {
 	logger  *slog.Logger
 	models  data.Models
 	mailer  *mailer.Mailer
-	youtube *youtube.YouTubeClient
-	spotify *spotify.SpotifyClient
+	youtube *youtube.Client
+	spotify *spotify.Client
 	wg      sync.WaitGroup
 }
 
@@ -91,12 +92,13 @@ func main() {
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Ukrop <no-reply@ukrop.pl>", "SMTP sender")
 
 	flag.StringVar(&cfg.yt.apiKey, "yt-api-key", os.Getenv("YOUTUBE_API_KEY"), "Api key for Youtube Data")
-	flag.IntVar(&cfg.yt.maxResults, "yt-max-resuts", 5, "Max queries returned by YT api at once")
+	flag.IntVar(&cfg.yt.maxResults, "yt-max-resuts", 5, "Max queries returned by Youtube api at once")
 
 	flag.StringVar(&cfg.sp.clientID, "sp-client-id", os.Getenv("SPOTIFY_CLIENT_ID"), "Client ID for Spotify")
 	flag.StringVar(&cfg.sp.clientSecret, "sp-client-secret", os.Getenv("SPOTIFY_CLIENT_SECRET"), "Client Secret for Spotify")
+	flag.IntVar(&cfg.sp.maxResults, "sp-max-resuts", 5, "Max queries returned by Spotify api at once")
 
-	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separete)", func(val string) error {
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separate)", func(val string) error {
 		cfg.cors.trustedOrigins = strings.Fields(val)
 		return nil
 	})

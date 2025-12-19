@@ -13,15 +13,16 @@ import (
 type SearchResult struct {
 	Artist       string `json:"artist"`
 	Title        string `json:"title"`
-	SpotifyURL   string `json:"spotify_url"`
+	MusicURL     string `json:"music_url"`
 	ThumbnailURL string `json:"thumbnail_url"`
+	Source       string `json:"source"`
 }
 
-type SpotifyClient struct {
+type Client struct {
 	client *spotify.Client
 }
 
-func New(apiID, apiSecret string) (*SpotifyClient, error) {
+func New(apiID, apiSecret string) (*Client, error) {
 	ctx := context.Background()
 	config := &clientcredentials.Config{
 		ClientID:     apiID,
@@ -33,12 +34,12 @@ func New(apiID, apiSecret string) (*SpotifyClient, error) {
 		return nil, fmt.Errorf("failed to create spotify client: %w", err)
 	}
 	httpClient := spotifyauth.New().Client(ctx, token)
-	return &SpotifyClient{client: spotify.New(httpClient)}, nil
+	return &Client{client: spotify.New(httpClient)}, nil
 }
 
-func (s *SpotifyClient) SearchMusic(query string) ([]SearchResult, error) {
+func (s *Client) SearchMusic(query string, maxResults int) ([]SearchResult, error) {
 	ctx := context.Background()
-	response, err := s.client.Search(ctx, query, spotify.SearchTypeTrack)
+	response, err := s.client.Search(ctx, query, spotify.SearchTypeTrack, spotify.Limit(maxResults))
 	if err != nil {
 		return nil, fmt.Errorf("spotify search call failed: %w", err)
 	}
@@ -48,8 +49,9 @@ func (s *SpotifyClient) SearchMusic(query string) ([]SearchResult, error) {
 		results = append(results, SearchResult{
 			Artist:       track.Artists[0].Name,
 			Title:        track.Name,
-			SpotifyURL:   track.ExternalURLs["spotify"],
+			MusicURL:     track.ExternalURLs["spotify"],
 			ThumbnailURL: track.Album.Images[0].URL,
+			Source:       "spotify",
 		})
 	}
 

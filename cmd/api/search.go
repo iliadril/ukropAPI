@@ -3,15 +3,57 @@ package main
 import (
 	"net/http"
 	"strings"
+
+	"api.ukrop.pl/internal/spotify"
+	"api.ukrop.pl/internal/validator"
+	"api.ukrop.pl/internal/youtube"
 )
 
-func (app *application) searchYoutubeHandler(w http.ResponseWriter, r *http.Request) {
-	query, err := app.readQueryParam(r)
-	if err != nil {
-		app.notFoundResponse(w, r)
+type Source string
+
+const (
+	SourceSpotify Source = "spotify"
+	SourceYoutube Source = "youtube"
+)
+
+type SearchResult struct {
+	Artist       string `json:"artist"`
+	Title        string `json:"title"`
+	MusicURL     string `json:"music_url"`
+	ThumbnailURL string `json:"thumbnail_url"`
+	Source       Source `json:"source"`
+}
+
+func fromYoutubeResult(r youtube.SearchResult) SearchResult {
+	return SearchResult{Artist: r.Artist, Title: r.Title, MusicURL: r.MusicURL, ThumbnailURL: r.ThumbnailURL, Source: SourceYoutube}
+}
+
+func fromSpotifyResult(r spotify.SearchResult) SearchResult {
+	return SearchResult{Artist: r.Artist, Title: r.Title, MusicURL: r.MusicURL, ThumbnailURL: r.ThumbnailURL, Source: SourceSpotify}
+}
+
+func (app *application) searchMusicData(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Sources []string `json:"sources"`
+		Query   string   `json:"q"`
+	}
+	v := validator.New()
+	qs := r.URL.Query()
+
+	input.Sources = app.readCSV(qs, "sources", []string{"spotify", "youtube"})
+	input.Query = app.readString(qs, "q", "")
+
+	v.Check(len(input.Sources) <= 2, "sources", "must provide at most two sources")
+	v.Check(input.Query != "", "q", "must provide a query")
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
 	}
 
-	suggestedLinks, err := app.youtube.SearchMusic(query, app.config.yt.maxResults)
+	var results []SearchResult
+
+	ytResults, err := app.youtube.SearchMusic(input.Query, app.config.yt.maxResults)
 	if err != nil {
 		switch {
 		case strings.HasPrefix(err.Error(), "youtube search call failed"):
@@ -21,20 +63,11 @@ func (app *application) searchYoutubeHandler(w http.ResponseWriter, r *http.Requ
 		}
 		return
 	}
-
-	err = app.writeJSON(w, http.StatusOK, envelope{"results": suggestedLinks}, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-}
-
-func (app *application) searchSpotifyHandler(w http.ResponseWriter, r *http.Request) {
-	query, err := app.readQueryParam(r)
-	if err != nil {
-		app.notFoundResponse(w, r)
+	for _, youtubeResult := range ytResults {
+		results = append(results, fromYoutubeResult(youtubeResult))
 	}
 
-	suggestedLinks, err := app.spotify.SearchMusic(query)
+	spResults, err := app.spotify.SearchMusic(input.Query, app.config.sp.maxResults)
 	if err != nil {
 		switch {
 		case strings.HasPrefix(err.Error(), "spotify search call failed"):
@@ -44,8 +77,11 @@ func (app *application) searchSpotifyHandler(w http.ResponseWriter, r *http.Requ
 		}
 		return
 	}
+	for _, spotifyResult := range spResults {
+		results = append(results, fromSpotifyResult(spotifyResult))
+	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"results": suggestedLinks}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"tracks": results}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

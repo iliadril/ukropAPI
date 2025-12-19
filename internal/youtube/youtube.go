@@ -12,25 +12,26 @@ import (
 type SearchResult struct {
 	Artist       string `json:"artist"`
 	Title        string `json:"title"`
-	YoutubeURL   string `json:"youtube_url"`
+	MusicURL     string `json:"music_url"`
 	ThumbnailURL string `json:"thumbnail_url"`
+	Source       string `json:"source"`
 }
 
-type YouTubeClient struct {
+type Client struct {
 	service *youtube.Service
 }
 
-func New(apiKey string) (*YouTubeClient, error) {
+func New(apiKey string) (*Client, error) {
 	ctx := context.Background()
 	service, err := youtube.NewService(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create youtube service: %w", err)
 	}
 
-	return &YouTubeClient{service: service}, nil
+	return &Client{service: service}, nil
 }
 
-func (y *YouTubeClient) SearchMusic(query string, maxResults int) ([]SearchResult, error) {
+func (y *Client) SearchMusic(query string, maxResults int) ([]SearchResult, error) {
 	call := y.service.Search.List([]string{"id", "snippet"}).
 		Q(query).
 		Type("video").
@@ -50,8 +51,9 @@ func (y *YouTubeClient) SearchMusic(query string, maxResults int) ([]SearchResul
 		results = append(results, SearchResult{
 			Artist:       item.Snippet.ChannelTitle,
 			Title:        item.Snippet.Title,
-			YoutubeURL:   fmt.Sprintf("https://music.youtube.com/watch?v=%s", item.Id.VideoId),
+			MusicURL:     fmt.Sprintf("https://music.youtube.com/watch?v=%s", item.Id.VideoId),
 			ThumbnailURL: item.Snippet.Thumbnails.High.Url,
+			Source:       "youtube",
 		})
 	}
 
