@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"api.ukrop.pl/internal/spotify"
 	"api.ukrop.pl/internal/validator"
@@ -53,7 +55,10 @@ func (app *application) searchMusicData(w http.ResponseWriter, r *http.Request) 
 
 	var results []SearchResult
 
-	ytResults, err := app.youtube.SearchMusic(input.Query, app.config.yt.maxResults)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	ytResults, err := app.youtube.SearchMusic(ctx, input.Query, app.config.yt.maxResults)
 	if err != nil {
 		switch {
 		case strings.HasPrefix(err.Error(), "youtube search call failed"):
@@ -68,7 +73,10 @@ func (app *application) searchMusicData(w http.ResponseWriter, r *http.Request) 
 		results = append(results, fromYoutubeResult(youtubeResult))
 	}
 
-	spResults, err := app.spotify.SearchMusic(input.Query, app.config.sp.maxResults)
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	spResults, err := app.spotify.SearchMusic(ctx, input.Query, app.config.sp.maxResults)
 	if err != nil {
 		switch {
 		case strings.HasPrefix(err.Error(), "spotify search call failed"):

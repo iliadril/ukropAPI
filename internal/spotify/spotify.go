@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 
 	"github.com/zmb3/spotify/v2"
@@ -29,16 +30,12 @@ func New(apiID, apiSecret string) (*Client, error) {
 		ClientSecret: apiSecret,
 		TokenURL:     spotifyauth.TokenURL,
 	}
-	token, err := config.Token(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create spotify client: %w", err)
-	}
-	httpClient := spotifyauth.New().Client(ctx, token)
+	token := config.TokenSource(ctx)
+	httpClient := oauth2.NewClient(ctx, token)
 	return &Client{client: spotify.New(httpClient)}, nil
 }
 
-func (s *Client) SearchMusic(query string, maxResults int) ([]SearchResult, error) {
-	ctx := context.Background()
+func (s *Client) SearchMusic(ctx context.Context, query string, maxResults int) ([]SearchResult, error) {
 	response, err := s.client.Search(ctx, query, spotify.SearchTypeTrack, spotify.Limit(maxResults))
 	if err != nil {
 		return nil, fmt.Errorf("spotify search call failed: %w", err)

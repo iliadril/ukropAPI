@@ -75,6 +75,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			"userID":          user.ID,
 		}
 		err := app.mailer.Send(user.Email, "user_welcome.tmpl", activationData)
+		app.logger.Info("sending activation mail to user", user.Email)
 		if err != nil {
 			app.logger.Error(err.Error())
 		}

@@ -3,7 +3,6 @@ package youtube
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
@@ -31,15 +30,12 @@ func New(apiKey string) (*Client, error) {
 	return &Client{service: service}, nil
 }
 
-func (y *Client) SearchMusic(query string, maxResults int) ([]SearchResult, error) {
+func (y *Client) SearchMusic(ctx context.Context, query string, maxResults int) ([]SearchResult, error) {
 	call := y.service.Search.List([]string{"id", "snippet"}).
 		Q(query).
 		Type("video").
 		VideoCategoryId("10").
 		MaxResults(int64(maxResults))
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
 	response, err := call.Context(ctx).Do()
 	if err != nil {
