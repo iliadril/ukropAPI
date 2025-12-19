@@ -85,10 +85,10 @@ func main() {
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
 
-	flag.StringVar(&cfg.smtp.host, "smtp-host", "", "SMTP host")
+	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("UKROP_SMTP_HOST"), "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP password")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("UKROP_SMTP_USERNAME"), "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("UKROP_SMTP_PASSWORD"), "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Ukrop <no-reply@ukrop.pl>", "SMTP sender")
 
 	flag.StringVar(&cfg.yt.apiKey, "yt-api-key", os.Getenv("YOUTUBE_API_KEY"), "Api key for Youtube Data")

@@ -57,6 +57,7 @@ func (app *application) searchMusicData(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		switch {
 		case strings.HasPrefix(err.Error(), "youtube search call failed"):
+			app.logger.Error(err.Error())
 			app.notFoundResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
@@ -71,6 +72,7 @@ func (app *application) searchMusicData(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		switch {
 		case strings.HasPrefix(err.Error(), "spotify search call failed"):
+			app.logger.Error(err.Error())
 			app.notFoundResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
