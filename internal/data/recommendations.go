@@ -22,6 +22,7 @@ type Recommendation struct {
 	YTLink      string    `json:"yt_link,omitzero"`
 	SpotifyLink string    `json:"spotify_link,omitzero"`
 	Comment     string    `json:"comment,omitzero"`
+	IsPublic    bool      `json:"is_public"`
 	Version     int       `json:"version"`
 }
 
@@ -43,12 +44,12 @@ type RecommendationModel struct {
 
 func (m RecommendationModel) Insert(recommendation *Recommendation) error {
 	query := `
-		INSERT INTO recommendations (user_id, artist, title, cover_url, yt_link, spotify_link, comment)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO recommendations (user_id, artist, title, cover_url, yt_link, spotify_link, comment, is_public)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, created_at, version`
 	args := []any{
 		recommendation.UserID, recommendation.Artist, recommendation.Title, recommendation.CoverURL,
-		recommendation.YTLink, recommendation.SpotifyLink, recommendation.Comment,
+		recommendation.YTLink, recommendation.SpotifyLink, recommendation.Comment, recommendation.IsPublic,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -63,7 +64,7 @@ func (m RecommendationModel) Get(id int) (*Recommendation, error) {
 	}
 
 	query := `
-		SELECT r.id, r.created_at, r.user_id, r.artist, r.title, r.cover_url, r.yt_link, r.spotify_link, r.comment, r.version,
+		SELECT r.id, r.created_at, r.user_id, r.artist, r.title, r.cover_url, r.yt_link, r.spotify_link, r.comment, r.is_public, r.version,
 		       u.id, u.name, u.username
 		FROM recommendations r
 		INNER JOIN users u ON r.user_id = u.id
@@ -85,6 +86,7 @@ func (m RecommendationModel) Get(id int) (*Recommendation, error) {
 		&recommendation.YTLink,
 		&recommendation.SpotifyLink,
 		&recommendation.Comment,
+		&recommendation.IsPublic,
 		&recommendation.Version,
 		&recommendation.CreatedBy.ID,
 		&recommendation.CreatedBy.Name,
@@ -105,8 +107,8 @@ func (m RecommendationModel) Get(id int) (*Recommendation, error) {
 func (m RecommendationModel) Update(recommendation *Recommendation) error {
 	query := `
         UPDATE recommendations 
-        SET artist = $1, title = $2, cover_url = $3, yt_link = $4, spotify_link = $5, comment = $6, version = version + 1
-        WHERE id = $7 AND version = $8
+        SET artist = $1, title = $2, cover_url = $3, yt_link = $4, spotify_link = $5, comment = $6, is_public = $7, version = version + 1
+        WHERE id = $8 AND version = $9
         RETURNING version`
 
 	args := []any{
@@ -116,6 +118,7 @@ func (m RecommendationModel) Update(recommendation *Recommendation) error {
 		recommendation.YTLink,
 		recommendation.SpotifyLink,
 		recommendation.Comment,
+		recommendation.IsPublic,
 		recommendation.ID,
 		recommendation.Version,
 	}
@@ -164,22 +167,23 @@ func (m RecommendationModel) Delete(id int) error {
 	return nil
 }
 
-func (m RecommendationModel) GetAll(createdAt time.Time, createdBy, title string, filters Filters) ([]*Recommendation, Metadata, error) {
+func (m RecommendationModel) GetAll(createdAt time.Time, createdBy, title string, privatePermissions bool, filters Filters) ([]*Recommendation, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT count(*) OVER(), r.id, r.created_at, r.user_id, r.artist, r.title, r.cover_url, r.yt_link, r.spotify_link, r.comment, r.version,
+		SELECT count(*) OVER(), r.id, r.created_at, r.user_id, r.artist, r.title, r.cover_url, r.yt_link, r.spotify_link, r.comment, r.is_public, r.version,
 		       u.id, u.name, u.username
 		FROM recommendations r
 		INNER JOIN users u ON r.user_id = u.id
 		WHERE (r.created_at::date = $1 OR $1 = '0001-01-01'::date)
 		AND (LOWER(u.username) = LOWER($2) OR $2 = '')
 		AND (to_tsvector('simple', r.title) @@ plainto_tsquery('simple', $3) OR $3 = '')
+		AND ($4 = true OR r.is_public = true)
 		ORDER BY %s %s, r.id DESC
-		LIMIT $4 OFFSET $5`, filters.sortColumn(), filters.sortDirection())
+		LIMIT $5 OFFSET $6`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	args := []any{createdAt, createdBy, title, filters.limit(), filters.offset()}
+	args := []any{createdAt, createdBy, title, privatePermissions, filters.limit(), filters.offset()}
 
 	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -206,6 +210,7 @@ func (m RecommendationModel) GetAll(createdAt time.Time, createdBy, title string
 			&recommendation.YTLink,
 			&recommendation.SpotifyLink,
 			&recommendation.Comment,
+			&recommendation.IsPublic,
 			&recommendation.Version,
 			&recommendation.CreatedBy.ID,
 			&recommendation.CreatedBy.Name,

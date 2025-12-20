@@ -18,6 +18,7 @@ func (app *application) createRecommendationHandler(w http.ResponseWriter, r *ht
 		YTLink      string `json:"yt_link"`
 		SpotifyLink string `json:"spotify_link"`
 		Comment     string `json:"comment"`
+		IsPublic    bool   `json:"is_public"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -37,6 +38,7 @@ func (app *application) createRecommendationHandler(w http.ResponseWriter, r *ht
 		YTLink:      input.YTLink,
 		SpotifyLink: input.SpotifyLink,
 		Comment:     input.Comment,
+		IsPublic:    input.IsPublic,
 	}
 
 	v := validator.New()
@@ -201,7 +203,16 @@ func (app *application) listRecommendationsHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	recommendations, metadata, err := app.models.Recommendations.GetAll(input.CreatedAt, input.CreatedBy, input.Title, input.Filters)
+	// check for public permissions
+	user := app.contextGetUser(r)
+	permissions, err := app.models.Permissions.GetAllForUser(user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	privatePermissions := permissions.Include("recommendations:write")
+
+	recommendations, metadata, err := app.models.Recommendations.GetAll(input.CreatedAt, input.CreatedBy, input.Title, privatePermissions, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
