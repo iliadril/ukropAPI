@@ -9,3 +9,6 @@ CREATE TABLE IF NOT EXISTS comments
 );
 
 CREATE INDEX IF NOT EXISTS comments__recommendation_id__idx ON comments (recommendation_id);
+
+INSERT INTO permissions (code)
+VALUES ('comments:write');

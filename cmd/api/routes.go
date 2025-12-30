@@ -21,6 +21,8 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPatch, "/v1/recommendations/:id", app.requirePermission("recommendations:write", app.updateRecommendationHandler))
 	router.HandlerFunc(http.MethodDelete, "/v1/recommendations/:id", app.requirePermission("recommendations:write", app.deleteRecommendationHandler))
 
+	router.HandlerFunc(http.MethodPost, "/v1/comments", app.requirePermission("comments:write", app.createCommentHandler))
+
 	router.HandlerFunc(http.MethodGet, "/v1/search", app.requirePermission("recommendations:write", app.searchMusicData))
 
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
