@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"api.ukrop.pl/internal/data"
@@ -45,4 +46,5 @@ func (app *application) createCommentHandler(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+	app.logger.Info(fmt.Sprintf("Comment created by %s", user.Username))
 }

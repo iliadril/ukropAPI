@@ -61,6 +61,7 @@ func (app *application) createRecommendationHandler(w http.ResponseWriter, r *ht
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+	app.logger.Info(fmt.Sprintf("Recommendation created by %s", user.Username))
 }
 
 func (app *application) showRecommendationHandler(w http.ResponseWriter, r *http.Request) {
