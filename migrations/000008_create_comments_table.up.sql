@@ -12,3 +12,11 @@ CREATE INDEX IF NOT EXISTS comments__recommendation_id__idx ON comments (recomme
 
 INSERT INTO permissions (code)
 VALUES ('comments:write');
+
+INSERT INTO users_permissions VALUES (
+                                      (SELECT id
+                                       FROM USERS),
+                                      (SELECT id
+                                       FROM permissions
+                                       WHERE code = 'comments:write')
+                                     );
