@@ -1,1 +1,1 @@
-ALTER TABLE recommendations DROP COLUMN is_public;
+ALTER TABLE recommendations DROP COLUMN IF EXISTS is_public;

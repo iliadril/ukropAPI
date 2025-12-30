@@ -55,3 +55,8 @@ GET {{host}}/v1/search/spotify/radiohead
         client.assert(response.status === 401, "Expected 401 Unauthorized for missing token");
     });
 %}
+
+### Get Recommendation
+@recommendation_id = 48
+GET {{host}}/v1/recommendations/{{recommendation_id}}
+Authorization: Bearer {{auth_token}}

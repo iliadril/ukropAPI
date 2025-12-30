@@ -1,1 +1,1 @@
-ALTER TABLE recommendations ADD COLUMN is_public boolean NOT NULL DEFAULT false;
+ALTER TABLE recommendations ADD COLUMN IF NOT EXISTS is_public boolean NOT NULL DEFAULT false;

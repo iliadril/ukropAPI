@@ -20,12 +20,12 @@ var AnonymousUser = &User{} // inactivated user with no ID, name, email or passw
 
 type User struct {
 	ID        int       `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"created_at,omitzero"`
 	Name      string    `json:"name"`
 	Email     string    `json:"-"`
 	Username  string    `json:"username"`
 	Password  password  `json:"-"`
-	Activated bool      `json:"activated"`
+	Activated bool      `json:"activated,omitzero"`
 	Version   int       `json:"-"`
 }
 

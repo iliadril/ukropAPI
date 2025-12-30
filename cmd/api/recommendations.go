@@ -81,6 +81,14 @@ func (app *application) showRecommendationHandler(w http.ResponseWriter, r *http
 		return
 	}
 
+	comments, err := app.models.Comments.GetForRecommendation(recommendation.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	recommendation.Comments = comments
+
 	err = app.writeJSON(w, http.StatusOK, envelope{"recommendation": recommendation}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

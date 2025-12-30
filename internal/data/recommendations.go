@@ -12,18 +12,19 @@ import (
 )
 
 type Recommendation struct {
-	ID          int       `json:"id"`
-	CreatedAt   time.Time `json:"created_at"`
-	CreatedBy   *User     `json:"created_by"`
-	UserID      int       `json:"-"`
-	Artist      string    `json:"artist"`
-	Title       string    `json:"title"`
-	CoverURL    string    `json:"cover_url,omitzero"`
-	YTLink      string    `json:"yt_link,omitzero"`
-	SpotifyLink string    `json:"spotify_link,omitzero"`
-	Comment     string    `json:"comment,omitzero"`
-	IsPublic    bool      `json:"is_public"`
-	Version     int       `json:"version"`
+	ID          int        `json:"id"`
+	CreatedAt   time.Time  `json:"created_at"`
+	CreatedBy   *User      `json:"created_by"`
+	UserID      int        `json:"-"`
+	Artist      string     `json:"artist"`
+	Title       string     `json:"title"`
+	CoverURL    string     `json:"cover_url,omitzero"`
+	YTLink      string     `json:"yt_link,omitzero"`
+	SpotifyLink string     `json:"spotify_link,omitzero"`
+	Comment     string     `json:"comment,omitzero"`
+	IsPublic    bool       `json:"is_public"`
+	Version     int        `json:"version"`
+	Comments    []*Comment `json:"comments,omitzero"`
 }
 
 func ValidateRecommendation(v *validator.Validator, recommendation *Recommendation) {
