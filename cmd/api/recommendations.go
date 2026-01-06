@@ -114,7 +114,14 @@ func (app *application) updateRecommendationHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
+	user := app.contextGetUser(r)
+	if recommendation.UserID != user.ID {
+		app.logger.Warn(fmt.Sprintf("user %s is not the owner of %d recommendation", user.Username, recommendation.ID))
+		app.notFoundResponse(w, r)
+	}
+
 	var input struct {
+		Artist      *string `json:"artist"`
 		Title       *string `json:"title"`
 		YTLink      *string `json:"yt_link"`
 		SpotifyLink *string `json:"spotify_link"`
@@ -125,6 +132,10 @@ func (app *application) updateRecommendationHandler(w http.ResponseWriter, r *ht
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
+	}
+
+	if input.Artist != nil {
+		recommendation.Artist = *input.Artist
 	}
 
 	if input.Title != nil {
@@ -168,6 +179,23 @@ func (app *application) deleteRecommendationHandler(w http.ResponseWriter, r *ht
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
+	}
+
+	recommendation, err := app.models.Recommendations.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	user := app.contextGetUser(r)
+	if recommendation.UserID != user.ID {
+		app.logger.Warn(fmt.Sprintf("user %s is not the owner of %d recommendation", user.Username, recommendation.ID))
+		app.notFoundResponse(w, r)
 	}
 
 	err = app.models.Recommendations.Delete(id)
