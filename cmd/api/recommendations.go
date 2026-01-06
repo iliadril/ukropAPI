@@ -123,9 +123,11 @@ func (app *application) updateRecommendationHandler(w http.ResponseWriter, r *ht
 	var input struct {
 		Artist      *string `json:"artist"`
 		Title       *string `json:"title"`
+		CoverURL    *string `json:"cover_url"`
 		YTLink      *string `json:"yt_link"`
 		SpotifyLink *string `json:"spotify_link"`
 		Comment     *string `json:"comment"`
+		IsPublic    *bool   `json:"is_public"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -137,9 +139,11 @@ func (app *application) updateRecommendationHandler(w http.ResponseWriter, r *ht
 	if input.Artist != nil {
 		recommendation.Artist = *input.Artist
 	}
-
 	if input.Title != nil {
 		recommendation.Title = *input.Title // dereference the pointer to get the value
+	}
+	if input.CoverURL != nil {
+		recommendation.CoverURL = *input.CoverURL
 	}
 	if input.YTLink != nil {
 		recommendation.YTLink = *input.YTLink
@@ -149,6 +153,9 @@ func (app *application) updateRecommendationHandler(w http.ResponseWriter, r *ht
 	}
 	if input.Comment != nil {
 		recommendation.Comment = *input.Comment
+	}
+	if input.IsPublic != nil {
+		recommendation.IsPublic = *input.IsPublic
 	}
 
 	v := validator.New()
