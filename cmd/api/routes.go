@@ -29,6 +29,10 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/users/:username", app.showUserHandler)
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)
 
+	router.HandlerFunc(http.MethodGet, "/v1/reservations", app.requirePermission("reservations:read", app.listReservationsHandler))
+	router.HandlerFunc(http.MethodPost, "/v1/reservations", app.requirePermission("reservations:write", app.createReservationHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/reservations/:id", app.requirePermission("reservations:read", app.showReservationHandler))
+
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 
 	router.Handler(http.MethodGet, "/debug/vars/", expvar.Handler())

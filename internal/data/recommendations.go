@@ -51,7 +51,7 @@ func (m RecommendationModel) Insert(recommendation *Recommendation) error {
 	args := []any{
 		recommendation.UserID, recommendation.Artist, recommendation.Title, recommendation.CoverURL,
 		recommendation.YTLink, recommendation.SpotifyLink, recommendation.Comment, recommendation.IsPublic,
-	}
+	} // TODO this inserts empty strings "" rather than nulls. Fix it
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

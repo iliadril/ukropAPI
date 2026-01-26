@@ -14,6 +14,8 @@ Content-Type: application/json
     client.global.set("auth_token", response.body.authentication_token.token);
 %}
 
+### ######## YT/SPOTI searches ########
+
 ### YouTube Search - Valid Query
 GET {{host}}/v1/search/youtube/imagine+dragons-radioactive
 Authorization: Bearer {{auth_token}}
@@ -56,7 +58,36 @@ GET {{host}}/v1/search/spotify/radiohead
     });
 %}
 
+######## Recommendation ########
+
 ### Get Recommendation
 @recommendation_id = 48
 GET {{host}}/v1/recommendations/{{recommendation_id}}
+Authorization: Bearer {{auth_token}}
+
+######## Reservations ########
+
+### Get Reservation
+@reservation_id = 1
+GET {{host}}/v1/reservations/{{reservation_id}}
+
+### Authenticate and Capture Token
+POST {{host}}/v1/reservations
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "title": "TEST2",
+  "start_time": "2026-01-28T21:00:00+01:00",
+  "end_time": "2026-01-28T23:00:00+01:00"
+}
+
+> {%
+    client.test("Authentication successful", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
+### Get Reservation
+GET {{host}}/v1/reservations
 Authorization: Bearer {{auth_token}}
