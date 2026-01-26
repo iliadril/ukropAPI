@@ -1,0 +1,1 @@
+ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_date_check;
