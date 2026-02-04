@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"api.ukrop.pl/internal/data"
 	"api.ukrop.pl/internal/validator"
@@ -12,15 +11,25 @@ import (
 
 func (app *application) createReservationHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title               string    `json:"title"`
-		Description         *string   `json:"description"`
-		StartTime           time.Time `json:"start_time"`
-		EndTime             time.Time `json:"end_time"`
-		Color               *string   `json:"color"`
-		ParentReservationID int       `json:"parent_reservation_id"`
+		Title       string  `json:"title"`
+		Description *string `json:"description"`
+		StartTime   string  `json:"start_time"`
+		EndTime     string  `json:"end_time"`
+		Color       *string `json:"color"`
 	}
 
 	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	startTime, err := app.parseDate(input.StartTime)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	endTime, err := app.parseDate(input.EndTime)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -33,10 +42,10 @@ func (app *application) createReservationHandler(w http.ResponseWriter, r *http.
 		CreatedBy:           user,
 		Title:               input.Title,
 		Description:         input.Description,
-		StartTime:           input.StartTime,
-		EndTime:             input.EndTime,
+		StartTime:           startTime,
+		EndTime:             endTime,
 		Color:               input.Color,
-		ParentReservationID: input.ParentReservationID,
+		ParentReservationID: 0,
 	}
 
 	v := validator.New()
