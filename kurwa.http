@@ -88,6 +88,6 @@ Content-Type: application/json
     });
 %}
 
-### Get Reservations
+### Get Reservation
 GET {{host}}/v1/reservations
 Authorization: Bearer {{auth_token}}

@@ -156,15 +156,6 @@ func (app *application) readDate(qs url.Values, key string, defaultValue time.Ti
 	return t
 }
 
-func (app *application) parseDate(dateString string) (time.Time, error) {
-	layout := "2006-01-02T15:04"
-	date, err := time.Parse(layout, dateString)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return date, nil
-}
-
 func (app *application) background(fn func()) {
 	app.wg.Go(func() {
 		defer func() {
