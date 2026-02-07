@@ -20,9 +20,9 @@ jobs:
       - name: Install dependencies
         run: go get cmd/api
       - name: Build
-        run: go build -v cmd/api/...
+        run: go build -v cmd/api
       - name: Test with the Go CLI
-        run: go test -json > TestResults-${{ matrix.go-version }}.json
+        run: go test -json cmd/api > TestResults-${{ matrix.go-version }}.json
       - name: Upload Go test results
         uses: actions/upload-artifact@v4
         with:
