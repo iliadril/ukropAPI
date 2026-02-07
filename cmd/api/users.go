@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -81,7 +82,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			"userID":          user.ID,
 		}
 		err := app.mailer.Send(user.Email, "user_welcome.tmpl", activationData)
-		app.logger.Info("sending activation mail to user", user.Email)
+		app.logger.Info(fmt.Sprintf("sending activation mail to user %s", user.Email))
 		if err != nil {
 			app.logger.Error(err.Error())
 		}
