@@ -17,12 +17,12 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Display Go version
         run: go version
-      - name: Install dependencies
-        run: go get cmd/api
+      - name: Download dependencies
+        run: go mod download
       - name: Build
-        run: go build -v cmd/api
+        run: go build -v ./cmd/api
       - name: Test with the Go CLI
-        run: go test -json cmd/api > TestResults-${{ matrix.go-version }}.json
+        run: go test -json ./cmd/api > TestResults-${{ matrix.go-version }}.json
       - name: Upload Go test results
         uses: actions/upload-artifact@v4
         with:
