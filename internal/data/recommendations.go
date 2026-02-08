@@ -24,7 +24,7 @@ type Recommendation struct {
 	Comment     string     `json:"comment,omitzero"`
 	IsPublic    bool       `json:"is_public"`
 	Version     int        `json:"version"`
-	Comments    []*Comment `json:"comments,omitzero"`
+	Comments    []*Comment `json:"comments,omitzero"` // TODO move this away from here
 }
 
 func ValidateRecommendation(v *validator.Validator, recommendation *Recommendation) {
